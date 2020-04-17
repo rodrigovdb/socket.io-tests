@@ -19,7 +19,7 @@ function shuffleArray(arr){
 }
 
 // Current round
-const cards = {}
+var cards = {}
 
 io.on('connection', (socket) => {
   console.log('a user connected')
@@ -32,17 +32,30 @@ io.on('connection', (socket) => {
     io.emit('start deck', name, JSON.stringify(shuffledArray))
   })
 
-  socket.on('card', (player, card) => {
+  socket.on('card', (player, deck) => {
+    deck = JSON.parse(deck)
+    card = deck.pop()
+
     console.log(`Player ${player} has played ${card}`)
 
-    if(cards.player){
+    // creates round response
+    if(cards[player]){
       console.log("Already exists")
-    }
-    else{
+    } else {
       cards[player] = card
+
+      // gives deck back to player who played
+      io.emit('card', player, JSON.stringify(deck))
+
+      // gives the played card to all players
+      io.emit('round', player, JSON.stringify(cards))
     }
 
-    io.emit('card', card)
+    if(Object.keys(cards).length > 1){
+      for (var [key, value] of Object.entries(cards)) {
+        cards[key] = null
+      }
+    }
   })
 
   socket.on('disconnect', () => {

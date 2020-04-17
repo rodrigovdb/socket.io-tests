@@ -25,6 +25,12 @@ function setDeckName(userId){
   return value
 }
 
+function refreshDeck(player, deck){
+  var field = $(`#deck_${player}`)
+
+  field.val(deck)
+}
+
 $(document).ready(function(){
   userId = getOrCreateCookie();
 
@@ -37,31 +43,38 @@ $(document).ready(function(){
     socket.emit('start', userId)
   })
 
-  $('#play').click(function(){
+  $('#card').click(function(){
     var field = $(`#${fieldId}`)
-    var val = JSON.parse(field.val())
-    var card = val.pop()
+    var deck  = JSON.parse(field.val())
 
-    field.val(JSON.stringify(val))
-
-    if(val.length < 1){
-      $('#play').prop("disabled", true)
+    if(deck.length < 2){
+      $('#card').prop("disabled", true)
     }
 
-    socket.emit('card', userId, card);
+    socket.emit('card', userId, JSON.stringify(deck));
   });
 
   socket.on('connect', function(){
     socket.emit('start', userId)
   });
 
-  socket.on('card', function(msg){
-    $('#messages').append($('<li>').text(msg));
+  socket.on('card', function(player, deck){
+    refreshDeck(player, deck)
+    //$('#messages').append($('<li>').text(msg));
   });
 
-  socket.on('start deck', function(field, deck){
-    var field = $(`#deck_${field}`)
+  socket.on('round', function(player, cards){
+    cards = JSON.parse(cards)
 
-    field.val(deck)
+    for (var [key, value] of Object.entries(cards)) {
+      cell = key == userId ? 'mine' : 'other'
+
+      console.log(cell)
+      $(`#${cell}`).html(value)
+    }
+  });
+
+  socket.on('start deck', function(player, deck){
+    refreshDeck(player, deck)
   })
 });
