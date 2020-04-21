@@ -92,8 +92,19 @@ $(document).ready(function(){
     wins  = parseInt($('#wins').html())
     losts = parseInt($('#losts').html())
 
-    result = wins > losts ? "win" : "lose";
+    if(wins == losts){
+      result = 'tied';
+    }
+    else if(wins > losts) {
+      result = 'win';
+    }
+    else {
+      result = 'lose';
+    }
 
-    $('#gameResult').html('Game has finished. You '+ result);
+    console.log("End. Result: "+ result);
+
+    $('#gameActions').hide()
+    $('#gameResult').html(`Game has finished. You  ${result}.`);
   });
 });
