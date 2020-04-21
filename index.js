@@ -3,7 +3,6 @@ const app     = express()
 const port    = 3000
 const http    = require('http').createServer(app)
 
-// socket.io stuffs
 const io      = require('socket.io')(http)
 
 app.get('/', (req, res) => {
@@ -13,13 +12,26 @@ app.get('/', (req, res) => {
 // serve static files
 app.use(express.static('public'))
 
+// initialize an empty array, from 1 to informed limit.
+function initializeArray(limit){
+  var arr = new Array()
+
+  for(var i = 1; i <= limit; i++){
+    arr.push(i)
+  }
+
+  return arr;
+}
+
+// shuffle an informed array.
 function shuffleArray(arr){
   for(var j, x, i = arr.length; i; j = parseInt(Math.random() * i), x = arr[--i], arr[i] = arr[j], arr[j] = x);
   return arr;
 }
 
-// Current round
-var cards = {}
+var cards   = {}  // for the current round, store played card from both players
+var rounds  = 10  // limit of rounds.
+var round   = 0   // current round. Control when reach limit and breaks.
 
 io.on('connection', (socket) => {
   console.log('a user connected')
@@ -27,7 +39,7 @@ io.on('connection', (socket) => {
   socket.on('start', (name) => {
     console.log('started as '+ name)
 
-    var shuffledArray = shuffleArray([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    var shuffledArray = shuffleArray(initializeArray(rounds));
 
     io.emit('start deck', name, JSON.stringify(shuffledArray))
   })
@@ -40,8 +52,9 @@ io.on('connection', (socket) => {
 
     // creates round response
     if(cards[player]){
-      console.log("Already exists")
+      console.log("Player "+ player +" already played for this round")
     } else {
+
       cards[player] = card
 
       // gives deck back to player who played
@@ -49,11 +62,29 @@ io.on('connection', (socket) => {
 
       // gives the played card to all players
       io.emit('round', player, JSON.stringify(cards))
-    }
 
-    if(Object.keys(cards).length > 1){
-      for (var [key, value] of Object.entries(cards)) {
-        cards[key] = null
+      if(Object.keys(cards).length > 1){
+        round += 1
+
+        // get winner
+        var winner  = null
+        var score   = 0
+        for (var [key, value] of Object.entries(cards)) {
+          if(value > score){
+            winner  = key
+            score   = value
+          }
+        }
+        io.emit('winner', winner)
+
+        // clear
+        cards = {}
+        io.emit('clearBoard')
+
+        // check if deck is empty
+        if(round == rounds){
+          io.emit('endGame')
+        }
       }
     }
   })

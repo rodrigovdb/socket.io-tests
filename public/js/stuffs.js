@@ -15,16 +15,15 @@ function getOrCreateCookie(){
 }
 
 /** Override #deck id and name to deck_$userId **/
-function setDeckName(userId){
+function renameElements(userId){
   input = $('#deck')
   value = `deck_${userId}`
 
   input.attr('id', value)
   input.attr('name', value)
-
-  return value
 }
 
+/** Update deck field with received deck **/
 function refreshDeck(player, deck){
   var field = $(`#deck_${player}`)
 
@@ -35,7 +34,8 @@ $(document).ready(function(){
   userId = getOrCreateCookie();
 
   // Create an unique id to deck
-  fieldId = setDeckName(userId);
+  renameElements(userId);
+  fieldId = `deck_${userId}`
 
   var socket = io();
 
@@ -60,7 +60,6 @@ $(document).ready(function(){
 
   socket.on('card', function(player, deck){
     refreshDeck(player, deck)
-    //$('#messages').append($('<li>').text(msg));
   });
 
   socket.on('round', function(player, cards){
@@ -69,12 +68,32 @@ $(document).ready(function(){
     for (var [key, value] of Object.entries(cards)) {
       cell = key == userId ? 'mine' : 'other'
 
-      console.log(cell)
       $(`#${cell}`).html(value)
     }
   });
 
+  socket.on('winner', function(player){
+    field = (userId == player) ? $('#wins') : $('#losts')
+    value = parseInt(field.html())
+
+    field.html(value + 1)
+  })
+
   socket.on('start deck', function(player, deck){
     refreshDeck(player, deck)
   })
+
+  socket.on('clearBoard', function(){
+    $('#mine').html(null);
+    $('#other').html(null);
+  });
+
+  socket.on('endGame', function(){
+    wins  = parseInt($('#wins').html())
+    losts = parseInt($('#losts').html())
+
+    result = wins > losts ? "win" : "lose";
+
+    $('#gameResult').html('Game has finished. You '+ result);
+  });
 });
