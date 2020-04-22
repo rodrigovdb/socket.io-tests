@@ -29,9 +29,21 @@ function shuffleArray(arr){
   return arr;
 }
 
+function sleep(time){
+  var i = 0;
+
+  console.log("sleeping...");
+
+  while( i < (time * 1000000)){
+    i += 1;
+  }
+
+  console.log("done!");
+}
+
 var cards   = {}  // for the current round, store played card from both players
 var rounds  = 10  // limit of rounds.
-var round   = 0   // current round. Control when reach limit and breaks.
+var round   = 1   // current round. Control when reach limit and breaks.
 
 io.on('connection', (socket) => {
   console.log('a user connected')
@@ -40,8 +52,9 @@ io.on('connection', (socket) => {
     console.log('started as '+ name)
 
     var shuffledArray = shuffleArray(initializeArray(rounds));
+    round = 1
 
-    io.emit('start deck', name, JSON.stringify(shuffledArray))
+    io.emit('start deck', name, JSON.stringify(shuffledArray), round, rounds)
   })
 
   socket.on('card', (player, deck) => {
@@ -53,6 +66,7 @@ io.on('connection', (socket) => {
     // creates round response
     if(cards[player]){
       console.log("Player "+ player +" already played for this round")
+      io.emit('wait', player);
     } else {
 
       cards[player] = card
@@ -66,7 +80,7 @@ io.on('connection', (socket) => {
       if(Object.keys(cards).length > 1){
         round += 1
 
-        // get winner
+        // get winner of current round
         var winner  = null
         var score   = 0
         for (var [key, value] of Object.entries(cards)) {
@@ -75,7 +89,8 @@ io.on('connection', (socket) => {
             score   = value
           }
         }
-        io.emit('winner', winner)
+
+        io.emit('winner', winner, round)
 
         // clear
         cards = {}

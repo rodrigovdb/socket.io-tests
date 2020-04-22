@@ -27,7 +27,7 @@
 
         <div class="row">
           <div class="col s5">
-            <div class="card">
+            <div id="mine-card" class="card">
               <div class="card-content center">
                 <div class="card-title">Mine</div>
 
@@ -40,7 +40,7 @@
           </div>
 
           <div class="col s5">
-            <div class="card">
+            <div id="other-card" class="card">
               <div class="card-content center">
                 <div class="card-title">Opponent</div>
 
@@ -57,7 +57,9 @@
         </div>
 
         <div class="row">
-          <h6><div id="round" class="col s4 center">0 / 10</div></h6>
+          <h6><div class="col s4 center">
+            <span id="currentRound"></span> / <span id="rounds"></span>
+          </div></h6>
           <h6><div id="wins" class="col s4 center">0</div></h6>
           <h6><div id="losts" class="col s4 center">0</div></h6>
         </div>
@@ -71,6 +73,9 @@
               <i class="material-icons left">send</i>
               Play
             </button>
+          </div>
+
+          <div id="message" class="col s12 red-text">
           </div>
         </div>
 

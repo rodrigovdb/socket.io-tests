@@ -72,20 +72,38 @@ $(document).ready(function(){
     }
   });
 
-  socket.on('winner', function(player){
+  socket.on('winner', function(player, round){
     field = (userId == player) ? $('#wins') : $('#losts')
     value = parseInt(field.html())
 
     field.html(value + 1)
+
+    $('#currentRound').html(round)
   })
 
-  socket.on('start deck', function(player, deck){
+  socket.on('start deck', function(player, deck, round, rounds){
     refreshDeck(player, deck)
+    $('#currentRound').html(round)
+    $('#rounds').html(rounds)
+  })
+
+  socket.on('wait', function(player){
+    if(player == userId) {
+      $('#message').html('wait for opponent');
+    }
   })
 
   socket.on('clearBoard', function(){
+    var mine  = $('#mine').html();
+    var other = $('#other').html();
+
+    // sleep
+    var i = 0
+    while(i < 1000000000) { i += 1 }
+
     $('#mine').html(null);
     $('#other').html(null);
+    $('#message').html(null);
   });
 
   socket.on('endGame', function(){
